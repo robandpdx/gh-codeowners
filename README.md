@@ -1,12 +1,8 @@
 # codeowners
 
-![build](https://github.com/robandpdx/gh-codeowners/workflows/build/badge.svg)
-
 A [GitHub CLI](https://cli.github.com/) extension for GitHub's [CODEOWNERS file](https://docs.github.com/en/github/creating-cloning-and-archiving-repositories/about-code-owners#codeowners-syntax).
 
-## Command line tool
-
-The `codeowners` [GitHub CLI](https://cli.github.com/) extension identifies the owners for files in a local repository or directory.
+The `codeowners` [GitHub CLI](https://cli.github.com/) extension identifies the owners for files in a local repository or directory. This extension uses the [codeowners go module from hmarr](https://github.com/hmarr/codeowners).
 
 ## Installation
 ```bash
