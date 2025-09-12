@@ -1,4 +1,4 @@
-# codeowners
+# gh-codeowners
 
 A [GitHub CLI](https://cli.github.com/) extension for GitHub's [CODEOWNERS file](https://docs.github.com/en/github/creating-cloning-and-archiving-repositories/about-code-owners#codeowners-syntax).
 
