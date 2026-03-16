@@ -16,10 +16,11 @@ By default, the command line tool will walk the directory tree, printing the cod
 ```console
 $ gh codeowners --help
 usage: codeowners <path>...
-  -f, --file string     CODEOWNERS file path
-  -h, --help            show this help message
-  -o, --owner strings   filter results by owner
-  -u, --unowned         only show unowned files (can be combined with -o)
+  -f, --file string           CODEOWNERS file path
+  -h, --help                  show this help message
+  -i, --ignore-file strings   gitignore-style file of patterns to exclude (repeatable)
+  -o, --owner strings         filter results by owner
+  -u, --unowned               only show unowned files (can be combined with -o)
 
 $ ls
 CODEOWNERS       DOCUMENTATION.md README.md        example.go       example_test.go
@@ -58,4 +59,16 @@ Pass the `--unowned` flag to only show unowned files.
 ```console
 $ gh codeowners -u
 CODEOWNERS                           (unowned)
+```
+
+Pass the `--ignore-file` flag to exclude files matching patterns in a [gitignore-style](https://git-scm.com/docs/gitignore) file. The flag can be repeated to load multiple ignore files.
+
+```console
+$ cat .buildignore
+*.go
+
+$ gh codeowners -i .buildignore
+CODEOWNERS                           (unowned)
+README.md                            product-manager@example.com
+DOCUMENTATION.md                     @example/docs-writers
 ```
