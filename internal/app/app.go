@@ -10,6 +10,7 @@ import (
 	"strings"
 
 	"github.com/hmarr/codeowners"
+	ignore "github.com/sabhiram/go-gitignore"
 	pflag "github.com/spf13/pflag"
 )
 
@@ -21,6 +22,7 @@ func Run(args []string, stdout, stderr io.Writer) int {
 		ownerFilters   []string
 		showUnowned    bool
 		codeownersPath string
+		ignoreFiles    []string
 		helpFlag       bool
 	)
 
@@ -29,6 +31,7 @@ func Run(args []string, stdout, stderr io.Writer) int {
 	fs.StringSliceVarP(&ownerFilters, "owner", "o", nil, "filter results by owner")
 	fs.BoolVarP(&showUnowned, "unowned", "u", false, "only show unowned files (can be combined with -o)")
 	fs.StringVarP(&codeownersPath, "file", "f", "", "CODEOWNERS file path")
+	fs.StringSliceVarP(&ignoreFiles, "ignore-file", "i", nil, "gitignore-style file of patterns to exclude (repeatable)")
 	fs.BoolVarP(&helpFlag, "help", "h", false, "show this help message")
 
 	fs.Usage = func() {
@@ -66,6 +69,16 @@ func Run(args []string, stdout, stderr io.Writer) int {
 		return 1
 	}
 
+	var matchers []*ignore.GitIgnore
+	for _, f := range ignoreFiles {
+		m, err := ignore.CompileIgnoreFile(f)
+		if err != nil {
+			fmt.Fprintln(stderr, err)
+			return 1
+		}
+		matchers = append(matchers, m)
+	}
+
 	// Make the @ optional for GitHub teams and usernames
 	for i := range ownerFilters {
 		ownerFilters[i] = strings.TrimLeft(ownerFilters[i], "@")
@@ -76,6 +89,9 @@ func Run(args []string, stdout, stderr io.Writer) int {
 
 	for _, startPath := range paths {
 		if !isDir(startPath) { // handle single file path
+			if isIgnored(startPath, matchers) {
+				continue
+			}
 			if err := printFileOwners(out, ruleset, startPath, ownerFilters, showUnowned); err != nil {
 				fmt.Fprintf(stderr, "error: %v", err)
 				return 1
@@ -87,10 +103,16 @@ func Run(args []string, stdout, stderr io.Writer) int {
 			if path == ".git" {
 				return filepath.SkipDir
 			}
-			if !d.IsDir() {
-				return printFileOwners(out, ruleset, path, ownerFilters, showUnowned)
+			if d.IsDir() {
+				if isIgnored(path, matchers) {
+					return filepath.SkipDir
+				}
+				return nil
 			}
-			return nil
+			if isIgnored(path, matchers) {
+				return nil
+			}
+			return printFileOwners(out, ruleset, path, ownerFilters, showUnowned)
 		})
 		if err != nil {
 			fmt.Fprintf(stderr, "error: %v", err)
@@ -135,6 +157,16 @@ func loadCodeowners(path string) (codeowners.Ruleset, error) {
 		return codeowners.LoadFileFromStandardLocation()
 	}
 	return codeowners.LoadFile(path)
+}
+
+// isIgnored returns true if the path matches any of the ignore patterns.
+func isIgnored(path string, matchers []*ignore.GitIgnore) bool {
+	for _, m := range matchers {
+		if m.MatchesPath(path) {
+			return true
+		}
+	}
+	return false
 }
 
 // isDir checks if there's a directory at the path specified.
