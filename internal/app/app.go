@@ -100,10 +100,13 @@ func Run(args []string, stdout, stderr io.Writer) int {
 		}
 
 		err = filepath.WalkDir(startPath, func(path string, d os.DirEntry, err error) error {
-			if path == ".git" {
-				return filepath.SkipDir
+			if err != nil {
+				return err
 			}
 			if d.IsDir() {
+				if d.Name() == ".git" {
+					return filepath.SkipDir
+				}
 				if isIgnored(path, matchers) {
 					return filepath.SkipDir
 				}
