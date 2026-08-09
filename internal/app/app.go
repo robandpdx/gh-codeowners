@@ -55,7 +55,7 @@ func Run(args []string, stdout, stderr io.Writer) int {
 
 	paths := fs.Args()
 	// If no positional arguments AND no functional flags were provided, show help (don't attempt to load CODEOWNERS).
-	if len(paths) == 0 && len(ownerFilters) == 0 && !showUnowned && codeownersPath == "" {
+	if len(paths) == 0 && len(ownerFilters) == 0 && !showUnowned && codeownersPath == "" && len(ignoreFiles) == 0 {
 		fs.Usage()
 		return 0
 	}
