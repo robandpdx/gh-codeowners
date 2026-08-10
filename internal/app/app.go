@@ -100,7 +100,22 @@ func Run(args []string, stdout, stderr io.Writer) int {
 		}
 
 		err = filepath.WalkDir(startPath, func(path string, d os.DirEntry, err error) error {
-			return handleWalkDirEntry(out, ruleset, path, d, err, matchers, ownerFilters, showUnowned)
+			if err != nil {
+				return err
+			}
+			if d.IsDir() {
+				if d.Name() == ".git" {
+					return filepath.SkipDir
+				}
+				if isIgnored(path, matchers) {
+					return filepath.SkipDir
+				}
+				return nil
+			}
+			if isIgnored(path, matchers) {
+				return nil
+			}
+			return printFileOwners(out, ruleset, path, ownerFilters, showUnowned)
 		})
 		if err != nil {
 			fmt.Fprintf(stderr, "error: %v", err)
@@ -108,25 +123,6 @@ func Run(args []string, stdout, stderr io.Writer) int {
 		}
 	}
 	return 0
-}
-
-func handleWalkDirEntry(out io.Writer, ruleset codeowners.Ruleset, path string, d os.DirEntry, walkErr error, matchers []*ignore.GitIgnore, ownerFilters []string, showUnowned bool) error {
-	if walkErr != nil {
-		return walkErr
-	}
-	if d.IsDir() {
-		if d.Name() == ".git" {
-			return filepath.SkipDir
-		}
-		if isIgnored(path, matchers) {
-			return filepath.SkipDir
-		}
-		return nil
-	}
-	if isIgnored(path, matchers) {
-		return nil
-	}
-	return printFileOwners(out, ruleset, path, ownerFilters, showUnowned)
 }
 
 func printFileOwners(out io.Writer, ruleset codeowners.Ruleset, path string, ownerFilters []string, showUnowned bool) error {

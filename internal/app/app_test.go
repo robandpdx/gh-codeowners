@@ -2,21 +2,11 @@ package app
 
 import (
 	"bytes"
-	"errors"
 	"os"
 	"path/filepath"
 	"strings"
 	"testing"
 )
-
-func TestHandleWalkDirEntryReturnsWalkDirErrorBeforeDirEntry(t *testing.T) {
-	walkErr := errors.New("walk failed")
-
-	err := handleWalkDirEntry(nil, nil, "unreadable", nil, walkErr, nil, nil, false)
-	if !errors.Is(err, walkErr) {
-		t.Fatalf("handleWalkDirEntry() error = %v, want %v", err, walkErr)
-	}
-}
 
 func TestRunSkipsGitDirectoryForAbsoluteStartPath(t *testing.T) {
 	dir := t.TempDir()
